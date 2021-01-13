@@ -5,7 +5,7 @@ import Layout from "../components/Layout";
 import Submit from "../components/Submit";
 import { initializeApollo } from "../lib/apollo";
 
-export const PEOPLE_BY_QUERY = gql`
+export const PEOPLE_BY_QUERY_FULL = gql`
   query PeopleByQuery($q: String!, $offset: Int, $rows: Int) {
     people(svdeql: { q: $q, offset: $offset, rows: $rows }) {
       resources {
@@ -34,22 +34,37 @@ export const PEOPLE_BY_QUERY = gql`
   }
 `;
 
+export const PEOPLE_BY_QUERY_MINIMAL = gql`
+  query PeopleByQuery($q: String!, $offset: Int, $rows: Int) {
+    people(svdeql: { q: $q, offset: $offset, rows: $rows }) {
+      resources {
+        uri
+        preferredHeading
+      }
+      totalMatches
+      startOffset
+      pageSize
+    }
+  }
+`;
+
 const queryVariables = {
-  q: "people whose name does not contain xyu",
+  q: "people whose name does not contain xyz",
   offset: 0,
   rows: 10,
-}
+};
 
 const IndexPage = () => {
   const { loading, error, data, fetchMore, networkStatus } = useQuery(
-    PEOPLE_BY_QUERY,
+    PEOPLE_BY_QUERY_MINIMAL,
     {
       variables: queryVariables,
       // Setting this value to true will make the component rerender when
       // the "networkStatus" changes, so we are able to know if it is fetching
       // more data
       notifyOnNetworkStatusChange: true,
-      fetchPolicy: "network-only"
+      // fetchPolicy: "network-only",
+      // nextFetchPolicy: "network-only"
     }
   );
 
@@ -66,7 +81,7 @@ const IndexPage = () => {
   if (error) return <ErrorMessage message="Error loading posts." />;
   if (loading && !loadingMore) return <div>Loading</div>;
 
-  console.log({data})
+  console.log({ data });
   const people = data.people.resources;
   const areMore = people.length < data.people.totalMatches;
 
@@ -98,7 +113,7 @@ export async function getStaticProps() {
   const apolloClient = initializeApollo();
 
   await apolloClient.query({
-    query: PEOPLE_BY_QUERY,
+    query: PEOPLE_BY_QUERY_MINIMAL,
     variables: queryVariables,
   });
 
